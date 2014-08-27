@@ -1,0 +1,162 @@
+-- 시스템 셋업 ( APPCONFIG )
+CREATE TABLE COM_SYSTEM_SETUP
+(
+	SYS_ID				INT	PRIMARY KEY IDENTITY(1,1),	--시스템아이디
+	SYS_KEY				NVARCHAR(50),					--키
+	SYS_VALUE			NVARCHAR(100),					--값
+	SYS_DESC			NVARCHAR(500),					--설명
+	CREATE_DATE			DATETIME,						--생성일
+	CREATE_ID			INT,							--생성자
+	UPDATE_DATE			DATETIME,						--수정자
+	UPDATE_ID			INT								--수정자
+)
+--다국어
+CREATE TABLE COM_LANGUAGE_INFO
+(
+	LANG_ID				INT PRIMARY KEY IDENTITY(1,1),	--언어아이디
+	LANG_TYPE			VARCHAR(1),						--언어타입(L:라벨, M:메세지)
+	LANG_KO				NVARCHAR(500),					--한국어
+	LANG_EN				NVARCHAR(500),					--영어
+	LANG_JP				NVARCHAR(500),					--일어
+	LANG_CH				NVARCHAR(500),					--중국어
+	CREATE_DATE			DATETIME,						--생성일
+	CREATE_ID			INT,							--생성자
+	UPDATE_DATE			DATETIME,						--수정자
+	UPDATE_ID			INT								--수정자
+)
+GO
+--코드카테고리마스터
+CREATE TABLE COM_CATEGORY_INFO
+(
+	CATEGORY_ID			VARCHAR(6) PRIMARY KEY,			--카테고리 아이디
+	CATEGORY_NAME		NVARCHAR(100),					--카테고리명
+	CATEGORY_DESC		NVARCHAR(500),					--카테고리설명
+	CREATE_DATE			DATETIME,						--생성일
+	CREATE_ID			INT,							--생성자
+	UPDATE_DATE			DATETIME,						--수정자
+	UPDATE_ID			INT								--수정자
+)
+GO
+--코드마스터
+CREATE TABLE COM_CODE_INFO
+(
+	CODE_ID			INT PRIMARY KEY IDENTITY(1,1),	--코드 아이디
+	CATEGORY_ID		VARCHAR(6),						--카테고리 아이디
+	ETC_CODE		VARCHAR(6),						--코드
+	CODE_NAME_KR	NVARCHAR(100),					--코드명
+	CODE_NAME_EN	NVARCHAR(100),					--코드명
+	CODE_NAME_JP	NVARCHAR(100),					--코드명
+	CODE_NAME_CH	NVARCHAR(100),					--코드명
+	CODE_DESC		NVARCHAR(500),					--코드설명
+	SORT_ORDER		INT,							--순번
+	CREATE_DATE		DATETIME,						--생성일
+	CREATE_ID		INT,							--생성자
+	UPDATE_DATE		DATETIME,						--수정자
+	UPDATE_ID		INT								--수정자
+)
+GO
+--사용자마스터
+CREATE TABLE COM_EMP_INFO
+(
+	EMP_REF_ID			INT PRIMARY KEY,	--시스템아이디
+	LOGINID				VARCHAR(50),		--로그인
+	LOGINPWD			VARCHAR(50),		--비번
+	EMP_NAME			NVARCHAR(50),		--이름
+	EMP_EMAIL			VARCHAR(150),		--이메일
+	DEPT_REF_ID			INT,				--부서아이디
+	POSITION_CLASS_CODE	VARCHAR(6),				--직급(POS001)
+	POSITION_GRP_CODE	VARCHAR(6),				--직군(POS002)
+	POSITION_RANK_CODE	VARCHAR(6),				--직위(POS003)
+	POSITION_DUTY_CODE	VARCHAR(6),				--직책(POS004)
+	EMP_TELL			VARCHAR(50),		--전번
+	EMP_TYPE			VARCHAR(6),			--타입(EMP001)
+	EMP_LAN_TYPE		VARCHAR(3),			--언어(KOR,ENG,JPN,CHN)
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+GO
+--부서마스터
+CREATE TABLE COM_DEPT_INFO
+(
+	DEPT_REF_ID			INT PRIMARY KEY,	--부서아이디
+	UP_DEPT_ID			INT,				--상위부서
+	DEPT_LEVEL			INT,				--레벨
+	DEPT_CODE			VARCHAR(50),		--부서코드
+	DEPT_NAME			NVARCHAR(100),		--부서명
+	USE_YN				VARCHAR(1),			--사용유무
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+GO
+--권한마스터
+CREATE TABLE COM_ROLE_INFO
+(
+	ROLE_ID				INT PRIMARY KEY IDENTITY(1,1),	--권한아이디
+	ROLE_KO_NAME		VARCHAR(100),					--권한명
+	ROLE_JP_NAME		VARCHAR(100),					--권한명
+	ROLE_EN_NAME		VARCHAR(100),					--권한명
+	ROLE_CH_NAME		VARCHAR(100),					--권한명
+	ROLE_SELECT			VARCHAR(1),						--SELECT권한
+	ROLE_DELETE			VARCHAR(1),						--DELETE권한
+	ROLE_UPDATE			VARCHAR(1),						--UPDATE권한
+	ROLE_INSERT			VARCHAR(1),						--INSERT권한
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+GO
+--페이지마스터
+CREATE TABLE COM_PAGE_INFO
+(
+	PAGE_ID				INT PRIMARY KEY IDENTITY(1,1),	--페이지아이디
+	PAGE_NAME_K0		NVARCHAR(100),					--페이지명
+	PAGE_URL			VARCHAR(150),					--URL
+	PAGE_IMG			VARCHAR(150),					--이미지NAME
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+GO
+--메뉴마스터
+CREATE TABLE COM_MENU_INFO
+(
+	MENU_ID				INT PRIMARY KEY IDENTITY(1,1),	--메뉴아이디
+	UP_MENU_ID			INT,							--상위메뉴아이디
+	PAGE_ID				INT,							--페이지아이디
+	MENU_NAME_KO		NVARCHAR(100),					--메뉴명
+	MENU_NAME_JP		NVARCHAR(100),					--메뉴명
+	MENU_NAME_EN		NVARCHAR(100),					--메뉴명
+	MENU_NAME_CH		NVARCHAR(100),					--메뉴명
+	USE_YN				VARCHAR(1),						--사용여부
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+GO
+--권한메뉴
+CREATE TABLE COM_ROLE_MENU
+(
+	ROLE_ID				INT,	--권한아이디
+	MENU_ID				INT,	--메뉴아이디
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)
+--권한유저
+CREATE TABLE COM_ROLE_USER
+(
+	ROLE_ID				INT,	--권한아이디
+	EMP_REF_ID			INT,	--사용자아이디
+	CREATE_DATE			DATETIME,			--생성일
+	CREATE_ID			INT,				--생성자
+	UPDATE_DATE			DATETIME,			--수정자
+	UPDATE_ID			INT					--수정자
+)

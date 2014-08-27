@@ -1,0 +1,49 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Grid</title>
+    <link href="~/Content/themes/redmond/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+    <link href="~/Scripts/jquery.jqGrid-4.5.4/css/ui.jqgrid.css" rel="stylesheet" />
+</head>
+<body>
+    <div>
+        <div id="jqgrid" style="width:1000px;">
+            <table id="grid"></table>
+            <div id="gridpager"></div>
+        </div>
+    </div>
+    <div>
+        <button type="button">fdfdsf</button>
+    </div>
+    <script src="~/Scripts/jquery-2.1.0.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+    <script src="~/Scripts/jquery.jqGrid-4.5.4/js/i18n/grid.locale-kr.js"></script>
+    <script src="~/Scripts/jquery.jqGrid-4.5.4/js/jquery.jqGrid.min.js"></script>
+    <script src="~/Scripts/Custom/MpPlugin.js"></script>
+    <script src="~/Scripts/Custom/MpGrid.js"></script>
+
+    <script type="text/javascript">
+       
+        $(function () {
+            var columData = [
+                { name: 'SYS_ID', label: 'Id', align: 'center', key: true, width: '100px', sortable: true },
+                { name: 'SYS_KEY', label: 'Key', align: 'center', key: true, width: '500px', sortable: false }
+            ];
+            Grid.GridInit('grid', columData,'SYS_ID', '/Sample/GridList', '100%', '400px', 'Grid', true);
+            $("#gbox_grid, #gview_grid, #gridpager, [role='grid']").css("width", "100%");
+
+            $("button").click(function () {
+                Grid.SearchGrid({id:'1'});
+            });
+        })
+
+
+    </script>
+</body>
+</html>

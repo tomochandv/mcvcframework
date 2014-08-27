@@ -1,0 +1,61 @@
+﻿
+<div class="panel panel-default">
+    <div class="panel-heading">성공 메세지</div>
+    <div class="panel-body">
+        @Html.ButtonImg("I", "btn2", "저장")
+        <br /><br />
+        <pre>
+        Common.Alert('저장되었습니다','1건이 저장되었습니다.', 'S');
+        </pre>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">에러 메세지</div>
+    <div class="panel-body">
+        @Html.ButtonImg("I", "btn3", "저장")
+        <br /><br />
+        <pre>
+        Common.Alert('저장실패', '에러에러에러~', 'E');
+        </pre>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">인포메이션 메세지</div>
+    <div class="panel-body">
+        @Html.ButtonImg("I", "btn4", "저장")
+        <br /><br />
+        <pre>
+        Common.Alert('인포메이션', '알림입니다.', 'I');
+        </pre>
+    </div>
+</div>
+@section script_bottom
+{
+    <script type="text/javascript">
+        $(function () {
+            $("#btn2").click(function () {
+                Page.Sucess();
+            });
+            $("#btn3").click(function () {
+                Page.Error();
+            });
+            $("#btn4").click(function () {
+                Page.Info();
+            });
+        });
+
+        var Page = {
+            Sucess: function () {
+                Common.Alert('저장되었습니다', '1건이 저장되었습니다.', 'S');
+            },
+            Error: function () {
+                Common.Alert('저장실패', '에러에러에러~', 'E');
+            },
+            Info: function () {
+                Common.Alert('인포메이션', '알림입니다.', 'I');
+            }
+        }
+    </script>
+}

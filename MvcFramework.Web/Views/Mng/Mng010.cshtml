@@ -1,0 +1,84 @@
+﻿<div class="row" style="padding: 0 10px 0 10px;">
+    <div id="jqgrid" style="width:100%;">
+        <table id="grid"></table>
+        <div id="gridpager"></div>
+    </div>
+</div>
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "저장")
+</div>
+
+@section script_bottom
+{
+    <script type="text/javascript">
+    $(function () {
+        Page.GridInit();
+        $("#btnAdd").click(function () {
+            Page.Add();
+        });
+
+    });
+
+    var Page = {
+        GridInit: function () {
+            var columData = [
+               { name: 'EMP_REF_ID', label: 'Id', align: 'center', width: '100px', hidden: true },
+               {
+                   name: 'MENU_ID', label: '@Html.Language(15, "키")', align: 'left', width: '200px', sortable: true,
+                   editable: true, edittype: "select", formatter:'select',
+                   editoptions: { value: Page.SetSelect() }
+               },
+               { name: 'KEY_CODE', key: true, label: '@Html.Language(17, "값")', align: 'left', width: '200px', sortable: false}
+            ];
+            Grid.GridInit('grid', 'jqgrid', columData, 'EMP_REF_ID', '@Url.Action("Mng010TreeList")', 310, 'List', true);
+            $("#cb_grid").hide();
+        },
+        GetMenuList: function () {
+            var url = '/Mng/Mng010MenuOption';
+            var data = Common.Ajax(url, null);
+            return data;
+        },
+        SetSelect: function () {
+            var count = 0;
+            var data = Page.GetMenuList();
+            var select = '';
+            $.each(data, function (index, value) {
+                if (select == '') {
+                    select +=  value.MENU_ID + ':' + value.MENU_NAME_KO;
+                }
+                else {
+                    select += ';' + value.MENU_ID + ':' + value.MENU_NAME_KO;
+                }
+            });
+            return select;
+        },
+        Add: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                var key_code = [];
+                var menu_ids = [];
+                
+                $.each(arrSelRow, function (index, value) {
+                    var data = $("#grid").jqGrid('getRowData', value);
+                    menu_ids.push($("#" + value + "_MENU_ID").val());
+                    key_code.push(data.KEY_CODE);
+                    console.log(index);
+                });
+                var result = Common.Ajax("@Url.Action("Mng010Insert")", { menu_id: $.toJSON(menu_ids), key_code: $.toJSON(key_code) });
+                if (result > 0) {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                    $("#grid").trigger("reloadGrid");
+                }
+                else {
+                    Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+                }
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        }
+    }
+
+    </script>
+
+}

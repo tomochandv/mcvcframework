@@ -1,0 +1,159 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Index</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-theme.css" rel="stylesheet" />
+    <link href="~/Content/themes/redmond/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+    <link href="~/Content/login.css" rel="stylesheet" />
+    <link href="~/Scripts/nprogress/nprogress.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.icons.css" rel="stylesheet" />
+
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    
+</head>
+<body>
+    <div class="container">
+        <form class="form-signin" role="form">
+            <h2 class="form-signin-heading">Please sign in</h2>
+            <input type="text" id="txtId" class="form-control" placeholder="@Html.Language(2,"ID를 입력하세요")" required autofocus>
+            <input type="password" id="txtPwd" class="form-control" placeholder="@Html.Language(3, "비밀번호를 입력하세요")" required>
+            <label class="checkbox">
+                <input type="checkbox" value="remember-me"> @Html.Language(4, "아이디저장")
+            </label>
+            <button class="btn btn-lg btn-primary btn-block" type="button">Sign in</button>
+        </form>
+    </div>
+
+    <script src="~/Scripts/jquery-2.1.0.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/jquery.cookie.js"></script>
+    <script src="~/Scripts/Custom/MpSecurity.js"></script>
+    <script src="~/Scripts/Custom/MpCommon.js"></script>
+    <script src="~/Scripts/json2.min.js"></script>
+    <script src="~/Scripts/nprogress/nprogress.js"></script>
+    <script src="~/Scripts/pnotify/jquery.pnotify.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var browser;
+            jQuery.uaMatch = function (ua) {
+                ua = ua.toLowerCase();
+
+                var match = /(chrome)[ \/]([\w.]+)/.exec(ua) ||
+                    /(webkit)[ \/]([\w.]+)/.exec(ua) ||
+                    /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
+                    /(msie) ([\w.]+)/.exec(ua) || ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) || [];
+
+                return {
+                    browser: match[1] || "",
+                    version: match[2] || "0"
+                };
+            };
+            // Don't clobber any existing jQuery.browser in case it's different
+            if (!jQuery.browser) {
+                matched = jQuery.uaMatch(navigator.userAgent);
+                browser = {};
+
+                if (matched.browser) {
+                    browser[matched.browser] = true;
+                    browser.version = matched.version;
+                }
+
+                // Chrome is Webkit, but Webkit is also Safari.
+                if (browser.chrome) {
+                    browser.webkit = true;
+                } else if (browser.webkit) {
+                    browser.safari = true;
+                }
+
+                jQuery.browser = browser;
+            }
+            if ($.browser.msie) {
+                if (Number($.browser.version) < 9) {
+                    Common.Alert('', '@Html.Language(38, "인터넷익스플로어는 9이상부터 지원합니다")', 'I');
+                    $("button, input").attr('disabled', 'disabled');
+                }
+            }
+
+            Page.LoadSetting();
+            $("button").click(function () {
+                Page.IdSaveCheck();
+                Page.Login();
+            });
+            $("body").keypress(function (e) {
+                if (e.keyCode == 13) {
+                    $("button").click();
+                }
+            });
+        });
+
+        var Page = {
+            IdSaveCheck: function () {
+                var checkStatus = $("input[type='checkbox']:checked").length;
+                if(checkStatus > 0){
+                    $.cookie("siteUserId", $("#txtId").val());
+                }else{    
+                    $.cookie('siteUserId', '', { expires: -1 });
+                }   
+            },
+            LoadSetting: function () {
+                var userId = $.cookie("siteUserId");
+                if(userId != null && userId != ""){
+                    $("#txtId").val(userId);
+                    $("input[type='checkbox']").attr("checked", "checked");
+                }
+            },
+            Login: function () {
+                if (Common.NullcheckSelector($("#txtPwd, #txtId"), "@Html.Language(5, "항목을 입력하세요")")) {
+                    var encid = MpEncript.Encription($("#txtId").val());
+                    var encpwd = MpEncript.Encription($("#txtPwd").val());
+                    var result = Common.Ajax("@Url.Action("Login")", { id: encid, pwd: encpwd });
+                    if (result) {
+                        Page.MenuSave();
+                        Page.RoleSave();
+                        Page.UserKeySave();
+                        location.href = '@Url.Action("Index","Home")';
+                    }
+                    else {
+                        Common.Alert('@Html.Language(6, "아이디 또는 비밀번호가 올바르지 않습니다")');
+                    }
+                }
+            },
+            MenuSave: function () {
+                if (typeof (Storage) !== "undefined") {
+                    var result = Common.Ajax("@Url.Action("Menu", "Webbase")", null);
+                    localStorage.removeItem("menu");
+                    localStorage.setItem("menu", JSON.stringify(result));
+                }
+            },
+            RoleSave: function () {
+                if (typeof (Storage) !== "undefined") {
+                    var result = Common.Ajax("@Url.Action("Role", "Webbase")", null);
+                    localStorage.removeItem("role");
+                    localStorage.setItem("role", JSON.stringify(result));
+                }
+            },
+            UserKeySave: function(){
+                if (typeof (Storage) !== "undefined") {
+                    var result = Common.Ajax("@Url.Action("UserKey", "Webbase")", null);
+                    localStorage.removeItem("UserKey");
+                    localStorage.setItem("UserKey", JSON.stringify(result));
+                }
+            }
+        }
+    </script>
+</body>
+</html>

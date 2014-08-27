@@ -1,0 +1,156 @@
+﻿
+<div id="jqgrid" style="width:100%;">
+    <table id="grid"></table>
+    <div id="gridpager"></div>
+</div>
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "추가")
+    @Html.ButtonImg("U", "btnEdit", "수정")
+    @Html.ButtonImg("D", "btnDelete", "삭제")
+</div>
+
+<div id="div_popup" style="display:none;">
+
+    <form id="pageForm" role="form" enctype="multipart/form-data" method="post" action="@Url.Action("Mng003Insert")">
+        <div class="form-group">
+            <label for="txtKo">@Html.Language(26, "페이지명")</label>
+            <input type="text" class="form-control" id="page_name" name="page_name" autofocus>
+        </div>
+        <div class="form-group">
+            <label for="txtEn">@Html.Language(27, "URL")</label>
+            <input type="text" class="form-control" id="url" name="url" autofocus>
+        </div>
+        <div class="form-group">
+            <label for="txtJp">@Html.Language(28, "이미지")</label>
+            <input type="file" class="form-control" id="PageFile" name="PageFile">
+            <input type="hidden" name="imgname" id="imgname">
+        </div>
+        <input type="hidden" id="txtId" name="txtId">
+        @Html.ButtonImg("U", "btnEditRun", "저장")
+        @Html.ButtonImg("I", "btnAddRun", "저장")
+        @Html.ButtonImg("C", "btnEnd", "취소")
+    </form>
+
+</div>
+
+@section script_bottom
+{
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script type="text/javascript">
+    $(function () {
+        Page.GridInit();
+        Page.GridLoad();
+        $("#btnDelete").click(function () {
+            Page.RunDelete();
+        });
+        $("#btnEdit").click(function () {
+            Page.EditClick();
+        });
+        $("#btnEnd").click(function () {
+            Page.End();
+        });
+        $("#btnEditRun").click(function () {
+            Page.RunEdit();
+        });
+        $("#btnAdd").click(function () {
+            Page.Add();
+        });
+        $("#btnAddRun").click(function () {
+            Page.RunAdd();
+        });
+        $("#btnSearch").click(function () {
+            Page.GridLoad();
+        });
+        $("#txtSKo").keypress(function () {
+            if (event.which == 13) {
+                $("#btnSearch").click();
+            }
+        });
+    });
+
+    var Page = {
+        GridInit: function () {
+            var columData = [
+              { name: 'PAGE_ID', label: 'Id', align: 'center', key: true, width: '50px', hidden: true },
+              { name: 'PAGE_NAME_KO', label: '@Html.Language(26, "페이지명")', align: 'left', width: '300px', sortable: true },
+              { name: 'PAGE_URL', label: '@Html.Language(27, "URL")', align: 'left', width: '400px', sortable: false },
+              { name: 'PAGE_IMG', label: '@Html.Language(28, "이미지")', align: 'left', width: '200px', sortable: false }
+            ];
+
+            Grid.GridInit('grid', 'jqgrid', columData, 'PAGE_NAME_KO', '@Url.Action("Mng003List")', 310, 'List', true);
+
+            $("#pageForm").ajaxForm({
+                dataType: 'json',
+                beforeSerialize: function () {
+                    return true;
+                },
+                success: function (data) {
+                    console.log(data);
+                    if (data > 0) {
+                        Common.Alert('@Html.Language(1, "저장 되었습니다.")', data + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                        Page.End();
+                        Page.GridLoad();
+                    }
+                    else {
+                        Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+                    }
+                }
+            });
+        },
+        GridLoad: function () {
+            $("#grid").trigger("reloadGrid");
+        },
+        End: function () {
+            $("#page_name, #url, #PageFile, #imgname, #txtId").val('');
+            $("#div_popup").dialog('close');
+        },
+        RunDelete: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                var arrIds = [];
+                $.each(arrSelRow, function (i, val) {
+                    arrIds.push(val);
+                });
+                var data = Common.Ajax('@Url.Action("Mng003Delete")', { id: $.toJSON(arrIds) });
+                Common.Alert('@Html.Language(13, "삭제되었습니다")', data + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                $("#grid").trigger("reloadGrid");
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        },
+        EditClick: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length == 1) {
+                $("#page_name, #url, #PageFile, #imgname, #txtId").val('');
+                var ret = $("#grid").jqGrid('getRowData', arrSelRow[0]);
+                $("#page_name").val(ret.PAGE_NAME_KO);
+                $("#url").val(ret.PAGE_URL);
+                $("#imgname").val(ret.PAGE_IMG);
+                $("#txtId").val(ret.PAGE_ID);
+
+                Common.OpenPopup('div_popup', 'Language Edit', 500, 350);
+                $("#btnAddRun").hide();
+                $("#btnEditRun").show();
+            }
+            else {
+                Common.Alert('@Html.Language(21, "하나의 값을 선택하세요")', '', 'I');
+            }
+        },
+        RunEdit: function () {
+            $("#pageForm").attr("action", "@Url.Action("Mng003Update")");
+            $("#pageForm").submit();
+        },
+        Add: function () {
+            Common.OpenPopup('div_popup', 'Language Add', 500, 350);
+            $("#txtKo, #txtEn, #txtJp, #txtCh, #txtId").val('');
+            $("#btnEditRun").hide();
+            $("#btnAddRun").show();
+        },
+        RunAdd: function () {
+            $("#pageForm").attr("action", "@Url.Action("Mng003Insert")");
+            $("#pageForm").submit();
+        }
+    }
+</script>
+}

@@ -1,0 +1,10 @@
+C:\Project\tomochan\MvcFramework\MvcFramework.Model\bin\Debug\MvcFramework.Model.dll
+C:\Project\tomochan\MvcFramework\MvcFramework.Model\bin\Debug\MvcFramework.Model.pdb
+C:\Project\tomochan\MvcFramework\MvcFramework.Model\obj\Debug\MvcFramework.Model.csprojResolveAssemblyReference.cache
+C:\Project\tomochan\MvcFramework\MvcFramework.Model\obj\Debug\MvcFramework.Model.dll
+C:\Project\tomochan\MvcFramework\MvcFramework.Model\obj\Debug\MvcFramework.Model.pdb
+C:\Project_Source\Mp_Project\MvcFramework.Model\bin\Debug\MvcFramework.Model.dll
+C:\Project_Source\Mp_Project\MvcFramework.Model\bin\Debug\MvcFramework.Model.pdb
+C:\Project_Source\Mp_Project\MvcFramework.Model\obj\Debug\MvcFramework.Model.csprojResolveAssemblyReference.cache
+C:\Project_Source\Mp_Project\MvcFramework.Model\obj\Debug\MvcFramework.Model.dll
+C:\Project_Source\Mp_Project\MvcFramework.Model\obj\Debug\MvcFramework.Model.pdb

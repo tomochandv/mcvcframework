@@ -1,0 +1,11 @@
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\bin\Debug\MvcFramework.Dac.dll
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\bin\Debug\MvcFramework.Dac.pdb
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\bin\Debug\Oracle.DataAccess.dll
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.csprojResolveAssemblyReference.cache
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.dll
+C:\Project\tomochan\MvcFramework\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.pdb
+C:\Project_Source\Mp_Project\MvcFramework.Dac\bin\Debug\MvcFramework.Dac.dll
+C:\Project_Source\Mp_Project\MvcFramework.Dac\bin\Debug\MvcFramework.Dac.pdb
+C:\Project_Source\Mp_Project\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.csprojResolveAssemblyReference.cache
+C:\Project_Source\Mp_Project\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.dll
+C:\Project_Source\Mp_Project\MvcFramework.Dac\obj\Debug\MvcFramework.Dac.pdb

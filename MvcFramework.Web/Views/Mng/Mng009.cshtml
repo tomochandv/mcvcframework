@@ -1,0 +1,193 @@
+﻿
+<div id="deptTree"></div>
+
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "추가")
+    @Html.ButtonImg("U", "btnEdit", "수정")
+    @Html.ButtonImg("I", "btnAddTotal", "저장")
+    @Html.ButtonImg("D", "btnDelete", "삭제")
+</div>
+
+<div id="div_popup" style="display:none;">
+    <form role="form">
+        <div class="form-group">
+            <label for="txtJp">@Html.Language(61, "부서코드")</label>
+            <input type="text" class="form-control" id="txtCode" autofocus>
+            <input type="hidden" id="txtUpCode" />
+        </div>
+        <div class="form-group">
+            <label for="txtKo">@Html.Language(60, "부서명")</label>
+            <input type="text" class="form-control" id="txtName" autofocus>
+        </div>
+        @Html.ButtonImg("I", "btnAddRun", "저장")
+        @Html.ButtonImg("C", "btnEnd", "취소")
+    </form>
+</div>
+
+<div id="div_popup1" style="display:none;">
+    <form role="form">
+        <div class="form-group">
+            <label for="txtKo">@Html.Language(60, "부서명")</label>
+            <input type="text" class="form-control" id="txtName1" autofocus>
+            <input type="hidden" id="txtId" />
+        </div>
+        @Html.ButtonImg("I", "btnEditRun", "저장")
+        @Html.ButtonImg("C", "btnEnd1", "취소")
+    </form>
+</div>
+
+@section script_bottom
+{
+    <script type="text/javascript">
+        $(function () {
+            Page.DeptTreeBind();
+            $("#deptTree").dynatree("getRoot").visit(function (node) {
+                node.expand(true);
+            });
+            $("#btnAdd").click(function () {
+                Page.AddClick();
+            });
+            $(window).on('resize', function () {
+                $("#deptTree").css("height", $(window).height() - 250);
+            }).trigger('resize');
+            $("#btnAddRun").click(function () {
+                outerWidth.AddRun();
+            });
+            $("#btnAddTotal").click(function () {
+                Page.AddTotal();
+            });
+            $("#btnEditRun").click(function () {
+                Page.EditRun();
+            });
+            $("#btnDelete").click(function () {
+                Page.Delete();
+            });
+            $("#btnEdit").click(function () {
+                Page.Edit();
+            });
+            $("#btnEnd").click(function () {
+                Page.End();
+            });
+            $("#btnEnd1").click(function () {
+                Page.End1();
+            });
+        });
+        var Page = {
+            DeptTreeBind: function () {
+                $("#deptTree").dynatree({
+                    selectMode: 1,
+                    persist: true,
+                    autoFocus: false,
+                    clickFolderMode: 3,
+                    minExpandLevel: 1,
+                    keyboard: true,
+                    initId: 'tid',
+                    initAjax: {
+                        type: 'post',
+                        url: '@Url.Action("Mng009TreeList", "Mng")'
+                    },
+                    onClick: function (node, event) {
+                        console.log(node.data.key);
+                    },
+                    onRender: function (dtnode, nodeSpan) {
+                        $(nodeSpan).find(".dynatree-icon").remove();
+                    },
+                    dnd: {
+                        onDragStart: function (node) {
+                            return true;
+                        },
+                        onDragStop: function (node) {
+                            // This function is optional.
+                            logMsg("tree.onDragStop(%o)", node);
+                        },
+                        autoExpandMS: 1000,
+                        preventVoidMoves: true,
+                        onDragEnter: function (node, sourceNode) {
+                            return true;
+                        },
+                        onDragOver: function (node, sourceNode, hitMode) {
+                            if (node.isDescendantOf(sourceNode)) {
+                                return false;
+                            }
+                            // Prohibit creating childs in non-folders (only sorting allowed)
+                            if (!node.data.isFolder && hitMode === "over") {
+                                return "after";
+                            }
+                        },
+                        onDrop: function (node, sourceNode, hitMode, ui, draggable) {
+                            sourceNode.move(node, hitMode);
+                            sourceNode.expand(true);
+                        },
+                        onDragLeave: function (node, sourceNode) {
+                        }
+                    }
+                });
+            },
+            AddClick: function () {
+                var node = $("#deptTree").dynatree("getActiveNode");
+                if (node != null) {
+                    $("#txtUpCode").val(node.data.key);
+                    Common.OpenPopup('div_popup', 'Add', 500, 400);
+                }
+            },
+            AddRun: function(){
+                var result = Common.Ajax("@Url.Action("Mng009Insert")", { up_dept_id: $("#txtUpCode").val(), dept_code: $("#txtCode").val(), dept_name: $("#txtName1").val() });
+                if (result > 0) {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', '', 'S');
+                    $("#deptTree").dynatree("getTree").reload();
+                    $("#txtName, #txtCode").val("");
+                    $("#div_popup").dialog('close');
+                }
+            },
+            Edit : function(){
+                var node = $("#deptTree").dynatree("getActiveNode");
+                if (node != null) {
+                    $("#txtName1").val(node.data.title);
+                    $("#txtId").val(node.data.key);
+                    Common.OpenPopup('div_popup1', 'Edit', 500, 300);
+                    console.log(node.data.key);
+                }
+            },
+            EditRun: function(){
+                var result = Common.Ajax("@Url.Action("Mng009UpdateNode")", { dept_ref_id: $("#txtId").val(), dept_name: $("#txtName1").val() });
+                if (result > 0) {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                    $("#deptTree").dynatree("getTree").reload();
+                    $("#div_popup1").dialog('close');
+                }
+            },
+            Delete: function () {
+                var node = $("#deptTree").dynatree("getActiveNode");
+                if (node != null) {
+                    if (node.data.children.length > 0) {
+                        Common.Alert('@Html.Language(62, "하위 조직이 있습니다")','', 'I');
+                    }
+                    else {
+                        var result = Common.Ajax("@Url.Action("Mng009UpdateUse")", {dept_ref_id : node.data.key });
+                        if (result > 0) {
+                            Common.Alert('@Html.Language(13, "삭제되었습니다")', result + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                            $("#deptTree").dynatree("getTree").reload();
+                        }
+                    }
+                }
+            },
+            AddTotal: function () {
+                var dict = $("#deptTree").dynatree("getTree").toDict();
+                var result = Common.Ajax("@Url.Action("Mng009Update")", { dict: $.toJSON(dict) });
+                if(result >0)
+                {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', '', 'S');
+                    $("#deptTree").dynatree("getTree").reload();
+                }
+            },
+            End: function () {
+                $("#div_popup").dialog('close');
+            }
+            ,
+            End1: function () {
+                $("#div_popup1").dialog('close');
+            }
+        }
+    </script>
+    
+}

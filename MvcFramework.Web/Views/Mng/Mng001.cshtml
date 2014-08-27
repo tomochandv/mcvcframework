@@ -1,0 +1,132 @@
+﻿
+<div class="row" style="padding: 0 10px 0 10px;">
+    <div id="jqgrid" style="width:100%;">
+        <table id="grid"></table>
+        <div id="gridpager"></div>
+    </div>
+</div>
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "추가")
+    @Html.ButtonImg("U", "btnEdit", "수정")
+    @Html.ButtonImg("D", "btnDelete", "삭제")
+</div>
+
+<div id="div_popup" style="display:none;">
+
+    <form role="form">
+        <div class="form-group">
+            <label for="txtKey">System Key</label>
+            <input type="text" class="form-control" id="txtKey" disabled autofocus>
+        </div>
+        <div class="form-group">
+            <label for="txtValue">System Value</label>
+            <input type="text" class="form-control" id="txtValue" >
+            <input type="hidden"  id="txtId">
+        </div>
+        <div class="form-group">
+            <label for="txtDesc">System Desc</label>
+            <textarea class="form-control" rows="3" id="txtDesc"></textarea>
+        </div>
+        @Html.ButtonImg("U", "btnEditRun", "저장")
+        @Html.ButtonImg("I", "btnAddRun", "저장")
+        @Html.ButtonImg("C", "btnEnd", "취소")
+    </form>
+
+</div>
+
+@section script_bottom
+{
+<script type="text/javascript">
+    $(function () {
+        Page.GridInit();
+        
+        $("#btnDelete").click(function () {
+            Page.RunDelete();
+        });
+        $("#btnEdit").click(function () {
+            Page.EditClick();
+        });
+        $("#btnEnd").click(function () {
+            Page.End();
+        });
+        $("#btnEditRun").click(function () {
+            Page.RunEdit();
+        });
+        $("#btnAdd").click(function () {
+            Page.Add();
+        });
+        $("#btnAddRun").click(function () {
+            Page.RunAdd();
+        });
+    });
+
+    var Page = {
+        GridInit: function () {
+            var columData = [
+               { name: 'SYS_ID', label: 'Id', align: 'center', key: true, width: '100px', hidden: true },
+               { name: 'SYS_KEY', label: '@Html.Language(15, "키")', align: 'left', width: '200px', sortable: true },
+               { name: 'SYS_VALUE', label: '@Html.Language(17, "값")', align: 'left', width: '200px', sortable: false },
+               { name: 'SYS_DESC', label: '@Html.Language(16, "설명")', align: 'left', width: '500px', sortable: false }
+            ];
+            Grid.GridInit('grid', 'jqgrid', columData, 'SYS_ID', '@Url.Action("Mng001List")', 310, 'List', true);
+        },
+        End: function () {
+            $("#txtKey, #txtValue, #txtDesc, #txtId").val('');
+            $("#div_popup").dialog('close');
+        },
+        RunDelete: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                var arrIds = [];
+                $.each(arrSelRow, function (i, val) {
+                    arrIds.push(val);
+                });
+                var data = Common.Ajax('@Url.Action("Mng001Delete")', { id: $.toJSON(arrIds) });
+                Common.Alert('@Html.Language(13, "삭제되었습니다")', data + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                $("#grid").trigger("reloadGrid");
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        },
+        EditClick: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length == 1) {
+                var ret = $("#grid").jqGrid('getRowData', arrSelRow[0]);
+                $("#txtKey").val(ret.SYS_KEY);
+                $("#txtId").val(ret.SYS_ID);
+                $("#txtValue").val(ret.SYS_VALUE);
+                $("#txtDesc").val(ret.SYS_DESC);
+
+                Common.OpenPopup('div_popup', 'Edit', 500, 400);
+                $("#txtKey").attr("disabled", "disabled");
+                $("#btnAddRun").hide();
+                $("#btnEditRun").show();
+            }
+            else {
+                Common.Alert('@Html.Language(21, "하나의 값을 선택하세요")', '', 'I');
+            }
+        },
+        RunEdit: function () {
+            var data = Common.Ajax('@Url.Action("Mng001Update")', { id: $("#txtId").val(), values: $("#txtValue").val(), desc: $("#txtDesc").val() });
+            Common.Alert('@Html.Language(1, "저장 되었습니다.")', data + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+            $("#grid").trigger("reloadGrid");
+            Page.End();
+        },
+        Add: function () {
+            Common.OpenPopup('div_popup', 'Edit', 500, 400);
+            $("#txtKey").removeAttr("disabled");
+            $("#btnEditRun").hide();
+            $("#btnAddRun").show();
+        },
+        RunAdd: function () {
+            var data = Common.Ajax('@Url.Action("Mng001Insert")', { key: $("#txtKey").val(), values: $("#txtValue").val(), desc: $("#txtDesc").val() });
+            Common.Alert('@Html.Language(1, "저장 되었습니다.")', data + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+            $("#grid").trigger("reloadGrid");
+            Page.End();
+        }
+    }
+
+</script>
+
+}

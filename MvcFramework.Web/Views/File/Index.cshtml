@@ -1,0 +1,157 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>:: @Html.Language(7, "파일업로드") ::</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-theme.css" rel="stylesheet" />
+    <link href="~/Content/themes/redmond/jquery-ui-1.10.4.custom.min.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.icons.css" rel="stylesheet" />
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style type="text/css">
+        @@import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+        html,
+        body {
+            font-family: "Nanum Gothic";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row" id="div_up">
+            <h3>@Html.Language(7, "파일업로드")</h3>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <form enctype="multipart/form-data" class="form-inline"  method="post" action="@Url.Action("FileSave")">
+                        <div class="form-group">
+                            <input type="file" id="file1" name="file1">
+                            <input type="hidden" id="hidid" name="hidid" value="@ViewBag.id" />
+                            <input type="hidden" id="hidType" name="hidType" value="@ViewBag.type" />
+                        </div>
+                        <button type="button" class="btn btn-primary btn-xs" id="btnSave">
+                            <span class="glyphicon glyphicon-plus"></span> @Html.Language(8, "저장")
+                        </button>
+                    </form>
+                </div>
+                <div class="panel-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width:70%;">@Html.Language(9, "파일명")</th>
+                                <th style="width:30%;">&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="div_error" style="display:none;">
+            <div class="jumbotron">
+                <h1>Error.</h1>
+                <p>@Html.Language(10, "올바르지 않은 경로로 접근하셨습니다")</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Scripts/jquery-2.1.0.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+    <script src="~/Scripts/jquery.cookie.js"></script>
+    <script src="~/Scripts/jquery.form.min.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/Custom/MpCommon.js"></script>
+    <script src="~/Scripts/Custom/MpPlugin.js"></script>
+    <script src="~/Scripts/pnotify/jquery.pnotify.min.js"></script>
+    <script type="text/javascript">
+    $(function () {
+        Page.Setting();
+        Page.List();
+        $("#btnSave").click(function () {
+            Page.Save();
+        });
+
+    });
+    var Page = {
+        Setting: function () {
+            var type = $("#hidType").val();
+            if (type == "") {
+                $('#div_up').slideUp(function () {
+                    $('#div_error').slideDown();
+                });
+            }
+        },
+        Save: function () {
+            $("form").ajaxForm({
+                dataType: 'json',
+                beforeSerialize: function () {
+                    return $("#file1").val().length > 0 ? true : false;
+                },
+                success: function (data) {
+                    if (data == true) {
+                        Common.Alert('@Html.Language(1, "저장 되었습니다.")', '@Html.Language(1, "저장 되었습니다.")', 'S');
+                        Page.List();
+                    }
+                    else {
+                        Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+                    }
+                },
+                error: function (e) {
+                    Common.Alert('@Html.Language(12, "에러가 발생하였습니다")', e, 'E');
+                }
+            });
+            $("form").submit();
+        },
+        List: function () {
+            var data = Common.Ajax("@Url.Action("FileList")", { id: $("#hidid").val() });
+            $("tbody > tr").remove();
+            $.each(data, function () {
+                var tr = "<tr>";
+                tr += "<td>" + this.FILE_ORI_NAME + "</td>";
+                tr += "<td style=\"text-align:right;\">";
+                tr += "<button type=\"button\" class=\"btn btn-primary\" id=\"btnDown\" onclick=\"Page.Down('" + this.FILE_URL + "', '" + this.FILE_NAME + "')\">";
+                tr += "<span class=\"glyphicon glyphicon-floppy-disk\"></span>";
+                tr += "</button>&nbsp;";
+                tr += "<button type=\"button\" class=\"btn btn-danger\" id=\"btnDelete\" onclick=\"Page.Delete('" + this.FILE_IDX + "')\">";
+                tr += "<span class=\"glyphicon glyphicon-trash\"></span>";
+                tr += "</button>";
+                tr += "</td>";
+                tr += "</tr>";
+
+                $("tbody").append(tr);
+            });
+        },
+        Down: function (urls, name) {
+            var url = '@Url.Action("FileDownload")';
+            url += "?fileUrl=" + urls;
+            url += "&fileName=" + name;
+            location.href = url;
+        },
+        Delete: function (idx) {
+            var data = Common.Ajax("@Url.Action("Delete")", { idx: idx });
+            if (data == true) {
+                Common.Alert('@Html.Language(13, "삭제되었습니다")', '@Html.Language(13, "삭제되었습니다")', 'S');
+                Page.List();
+            }
+            else {
+                Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+            }
+        }
+    }
+    </script>
+</body>
+</html>

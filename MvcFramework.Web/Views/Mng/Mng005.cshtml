@@ -1,0 +1,237 @@
+﻿<div class="row" style="padding: 0 10px 0 10px;">
+    <div id="jqgrid" style="width:100%;">
+        <table id="grid"></table>
+        <div id="gridpager"></div>
+    </div>
+</div>
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "추가")
+    @Html.ButtonImg("U", "btnEdit", "수정")
+    @Html.ButtonImg("D", "btnDelete", "삭제")
+</div>
+
+<div id="div_popup" style="display:none;">
+    <form role="form">
+        <input type="hidden" id="hidRoleId" />
+        <div class="form-group">
+            <label for="txtKey">@Html.Language(40,"권한명")</label>
+            <input type="text" class="form-control" id="txtKo" placeholder="한글명">
+            <input type="text" class="form-control" id="txtEn" placeholder="English">
+            <input type="text" class="form-control" id="txtJp" placeholder="日本語">
+            <input type="text" class="form-control" id="txtCh" placeholder="中国的">
+        </div>
+        <div class="form-group">
+            <label for="txtValue">@Html.Language(41, "버튼권한")</label>
+            <label class="checkbox-inline">
+                <input type="checkbox" id="ckS" value="S"> @Html.Language(42, "조회")
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" id="ckI" value="I"> @Html.Language(43, "저장")
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" id="ckU" value="U"> @Html.Language(44, "수정")
+            </label>
+            <label class="checkbox-inline">
+                <input type="checkbox" id="ckD" value="D"> @Html.Language(45, "삭제")
+            </label>
+        </div>
+        <div class="form-group">
+            <label for="txtValue">@Html.Language(46, "메뉴")</label>
+            <div id="menu_tree" style="height:250px;"></div>
+        </div>
+        
+
+        @Html.ButtonImg("U", "btnEditRun", "저장")
+        @Html.ButtonImg("I", "btnAddRun", "저장")
+        @Html.ButtonImg("C", "btnEnd", "취소")
+    </form>
+
+</div>
+
+@section script_bottom
+{
+    <script type="text/javascript">
+    $(function () {
+        Page.GridInit();
+        Page.MenuTreeInit();
+        $("#btnDelete").click(function () {
+            Page.RunDelete();
+        });
+        $("#btnEdit").click(function () {
+            Page.EditClick();
+        });
+        $("#btnEnd").click(function () {
+            Page.End();
+        });
+        $("#btnEditRun").click(function () {
+            Page.RunEdit();
+        });
+        $("#btnAdd").click(function () {
+            Page.Add();
+        });
+        $("#btnAddRun").click(function () {
+            Page.RunAdd();
+        });
+    });
+
+    var Page = {
+        GridInit: function () {
+            var columData = [
+                { name: 'ROLE_ID', label: 'Id', align: 'center', key: true, width: '100px', hidden: true },
+                { name: 'ROLE_KO_NAME', label: 'KO', align: 'left', width: '200px', sortable: true },
+                { name: 'ROLE_EN_NAME', label: 'EN', align: 'left', width: '200px', sortable: false },
+                { name: 'ROLE_JP_NAME', label: 'JP', align: 'left', width: '200px', sortable: false },
+                { name: 'ROLE_CH_NAME', label: 'CH', align: 'left', width: '200px', sortable: false },
+                { name: 'ROLE_SELECT', label: 'SELECT', align: 'center', width: '50px', sortable: false },
+                { name: 'ROLE_INSERT', label: 'Insert', align: 'center', width: '50px', sortable: false },
+                { name: 'ROLE_UPDATE', label: 'Update', align: 'center', width: '50px', sortable: false },
+                { name: 'ROLE_DELETE', label: 'Delete', align: 'center', width: '50px', sortable: false },
+            ];
+            Grid.GridInit('grid', 'jqgrid', columData, 'ROLE_KO_NAME', '@Url.Action("Mng005List")', 310, 'List', true);
+        },
+        End: function () {
+            $("#txtKo, #txtCh, #txtJp, #txtEn").val('');
+            $("#div_popup").dialog('close');
+        },
+        RunDelete: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                if (Page.CheckUsedUSer(arrSelRow)) {
+                    var arrIds = [];
+                    $.each(arrSelRow, function (i, val) {
+                        arrIds.push(val);
+                    });
+                    var data = Common.Ajax('@Url.Action("Mng005Delete")', { role_id: $.toJSON(arrIds) });
+                    Common.Alert('@Html.Language(13, "삭제되었습니다")', data + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                    $("#grid").trigger("reloadGrid");
+                    $("#menu_tree").dynatree("getTree");
+                }
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        },
+        CheckUsedUSer: function (arrSelRow) {
+            var count = 0;
+            $.each(arrSelRow, function (i, val) {
+                count += Common.Ajax('@Url.Action("Mng005CheckUser")', { role_id: val});
+            });
+            if (count > 0) {
+                Common.Alert('@Html.Language(47, "사용중입니다")', '', 'I');
+                return false;
+            }
+            else{return true;}
+        },
+        EditClick: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length == 1) {
+                var ret = $("#grid").jqGrid('getRowData', arrSelRow[0]);
+                var data = Common.Ajax("@Url.Action("Mng005View")", { role_id: ret.ROLE_ID });
+                
+                $("#hidRoleId").val(data.ROLE_ID);
+                $("#txtKo").val(data.ROLE_KO_NAME);
+                $("#txtEn").val(data.ROLE_EN_NAME);
+                $("#txtJp").val(data.ROLE_JP_NAME);
+                $("#txtCh").val(data.ROLE_CH_NAME);
+
+                $("#ckS").attr("checked", data.ROLE_SELECT == "Y" ? true : false);
+                $("#ckI").attr("checked", data.ROLE_INSERT == "Y" ? true : false);
+                $("#ckD").attr("checked", data.ROLE_DELETE == "Y" ? true : false);
+                $("#ckU").attr("checked", data.ROLE_UPDATE == "Y" ? true : false);
+
+                if (data.MENUES != null) {
+                    $.each(data.MENUES, function (index, value) {
+                        $("#menu_tree").dynatree("getRoot").visit(function (node) {
+                            if (value.MENU_ID == node.data.key) {
+                                node.select(true);
+                            }
+                        });
+                    });
+                }
+
+                Common.OpenPopup('div_popup', 'Edit', 900, 600);
+                $("#btnAddRun").hide();
+                $("#btnEditRun").show();
+            }
+            else {
+                Common.Alert('@Html.Language(21, "하나의 값을 선택하세요")', '', 'I');
+            }
+        },
+        RunEdit: function () {
+            var selectedNodes = $("#menu_tree").dynatree("getSelectedNodes");
+            var selectedKeys = $.map(selectedNodes, function (node) {
+                return node.data.key;
+            });
+            var partsel = new Array();
+            $(".dynatree-partsel:not(.dynatree-selected)").each(function () {
+                var node = $.ui.dynatree.getNode(this);
+                partsel.push(node.data.key);
+            });
+            selectedKeys = selectedKeys.concat(partsel);
+            var data = {
+                menus: $.toJSON(selectedKeys),
+                ko: $("#txtKo").val(), jp: $("#txtJp").val(), en: $("#txtEn").val(), ch: $("#txtCh").val(),
+                s: $("#ckS:checked").length > 0 ? "Y" : "N",
+                d: $("#ckD:checked").length > 0 ? "Y" : "N",
+                i: $("#ckI:checked").length > 0 ? "Y" : "N",
+                u: $("#ckU:checked").length > 0 ? "Y" : "N",
+                role_id : $("#hidRoleId").val()
+            };
+
+            var result = Common.Ajax('@Url.Action("Mng005Update")', data);
+            Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+            $("#grid").trigger("reloadGrid");
+            $("#menu_tree").dynatree("getTree");
+            Page.End();
+        },
+        Add: function () {
+            Common.OpenPopup('div_popup', 'Add', 900, 600);
+            $("#btnEditRun").hide();
+            $("#btnAddRun").show();
+        },
+        RunAdd: function () {
+            var selectedNodes = $("#menu_tree").dynatree("getSelectedNodes");
+            var selectedKeys = $.map(selectedNodes, function (node) {
+                return node.data.key;
+            });
+            var partsel = new Array();
+            $(".dynatree-partsel:not(.dynatree-selected)").each(function () {
+                var node = $.ui.dynatree.getNode(this);
+                partsel.push(node.data.key);
+            });
+            selectedKeys = selectedKeys.concat(partsel);
+            var data = {
+                menus: $.toJSON(selectedKeys),
+                ko: $("#txtKo").val(), jp: $("#txtJp").val(), en: $("#txtEn").val(), ch: $("#txtCh").val(),
+                s: $("#ckS:checked").length > 0 ? "Y" : "N",
+                d: $("#ckD:checked").length > 0 ? "Y" : "N",
+                i: $("#ckI:checked").length > 0 ? "Y" : "N",
+                u: $("#ckU:checked").length > 0 ? "Y" : "N"
+            };
+            var result = Common.Ajax('@Url.Action("Mng005Insert")', data);
+            Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+            $("#grid").trigger("reloadGrid");
+            $("#menu_tree").dynatree("getTree");
+            Page.End();
+        },
+        MenuTreeInit: function () {
+            $("#menu_tree").dynatree({
+                selectMode: 3,
+                persist: false,
+                autoFocus: false,
+                clickFolderMode: 2,
+                minExpandLevel: 4,
+                checkbox: true,
+                keyboard: true,
+                initId: 'tid',
+                initAjax: {
+                    type: 'post',
+                    url: '@Url.Action("Mng004TreeList", "Mng")'
+                }
+            });
+        }
+    }
+
+</script>
+
+}

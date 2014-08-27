@@ -1,0 +1,299 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>:: TITLE ::</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-theme.css" rel="stylesheet" />
+    <link href="~/Content/themes/redmond/jquery-ui-1.10.4.custom.css" rel="stylesheet" />
+    <link href="~/Content/Site.css" rel="stylesheet" />
+    <link href="~/Scripts/dynatree/skin/ui.dynatree.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.css" rel="stylesheet" />
+    <link href="~/Scripts/pnotify/jquery.pnotify.default.icons.css" rel="stylesheet" />
+    <link href="~/Scripts/jquery.jqGrid-4.5.4/css/ui.jqgrid.css" rel="stylesheet" />
+    <link href="~/Scripts/nprogress/nprogress.css" rel="stylesheet" />
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div id="wrap">
+        <!-- head -->
+        <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/Home/Index">Mvc Framework</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav" id="topMenu"></ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">@ViewBag.Name </a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#">Action</a></li>
+                                <li><a href="#">Another action</a></li>
+                                <li><a href="#">Something else here</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#">Separated link</a></li>
+                                <li class="divider"></li>
+                                <li><a href="@Url.Action("Logout","Login")">Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>-
+                </div>
+            </div>
+        </div>
+        <!--// head -->
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- side bar-->
+                <div class="col-sm-3 col-md-2 sidebar" style="border:1px solid #cccccc; " id="divSideBar">
+                    <div id="tree" style="height:100%;"></div>
+                    <input type="hidden" id="hidSide" value="1" />
+                </div>
+                <!--// side bar-->
+                <a id="toggleSidebar" href="#" class="toggles">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                </a>
+                <!-- content -->
+                <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" id="divMain">
+                    <h4 class="page-header"><span id="titleTop"></span> <small><span id="titleMiddle"></span></small></h4>
+                    @RenderBody()
+                </div>
+                <!--// content -->
+            </div>
+        </div>
+        
+    </div>
+    <div id="footer">
+        <div class="container-fluid">
+            <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" id="divFooter">
+                <p class="text-muted">Mvc Framework. 2014.</p>
+            </div>
+        </div>
+    </div>
+
+    <form id="formMain" method="post">
+        <input type="hidden" name="topMenuId" id="topMenuId" />
+        <input type="hidden" name="topMenuUrl" id="topMenuUrl" />
+    </form>
+
+
+    <script src="~/Scripts/jquery-2.1.0.min.js"></script>
+    <script src="~/Scripts/jquery-ui-1.10.4.min.js"></script>
+    <script src="~/Scripts/jquery.cookie.js"></script>
+    <script src="~/Scripts/bootstrap.min.js"></script>
+    <script src="~/Scripts/dynatree/jquery.dynatree.js"></script>
+    <script src="~/Scripts/pnotify/jquery.pnotify.min.js"></script>
+    <script src="~/Scripts/jquery.jqGrid-4.5.4/js/i18n/grid.locale-kr.js"></script>
+    <script src="~/Scripts/jquery.jqGrid-4.5.4/js/jquery.jqGrid.min.js"></script>
+    <script src="~/Scripts/jquery.json-2.2.min.js"></script>
+    <script src="~/Scripts/Custom/MpCommon.js"></script>
+    <script src="~/Scripts/Custom/MpPlugin.js"></script>
+    <script src="~/Scripts/Custom/MpGrid.js"></script>
+    <script src="~/Scripts/Custom/MpKey.js"></script>
+    <script src="~/Scripts/nprogress/nprogress.js"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            Master.AjaxProgress();
+            Master.TopMenuSetting();
+            Master.TopMenuActive();
+            Master.SideTreeCreate();
+            Master.DefaultSetting();
+            
+            $("#toggleSidebar").click(function () {
+                Master.SlidebarToggle();
+            });
+        });
+        var Master = {
+            DefaultSetting : function(){
+                var url = '@Request.Url.AbsolutePath.ToLower().Split('/')[1]';
+                if (url == '' || url == 'home') {
+                    $("#toggleSidebar > span").removeClass("glyphicon-chevron-left");
+                    $("#toggleSidebar > span").addClass("glyphicon-chevron-right");
+                    $("#divMain").removeClass("col-sm-9 col-md-10");
+                    $("#divMain").addClass("col-sm-12 col-md-12 no-sidebar");
+                    $("#divFooter").removeClass("col-sm-9 col-md-10");
+                    $("#divFooter").addClass("col-sm-12 col-md-12 no-sidebar");
+                    $('#divSideBar').hide();
+                    $("#toggleSidebar").hide();
+                    $("#hidSide").val('2');
+                }
+            },
+            //상단 메뉴세팅
+            TopMenuSetting: function () {
+                var obj;
+                if (typeof (Storage) !== "undefined") {
+                    obj = $.parseJSON(localStorage.getItem("menu"));
+                }
+                else {
+                    obj = Common.Ajax("@Url.Action("Menu", "Webbase")", null);
+                }
+                
+                $.each(obj, function () {
+                    if (this.UP_MENU_ID == '0') {
+                        var menu;
+                        var name;
+                        if ('@Html.LanguageType()' == 'KO') {
+                            name = this.MENU_NAME_KO;
+                        }
+                        if ('@Html.LanguageType()' == 'EN') {
+                            name = this.MENU_NAME_EN;
+                        }
+                        if ('@Html.LanguageType()' == 'JP') {
+                            name = this.MENU_NAME_JP;
+                        }
+                        if ('@Html.LanguageType()' == 'CH') {
+                            name = this.MENU_NAME_CH;
+                        }
+                        menu = Master.TopMenuCreate(this.MENU_ID, this.PAGE_URL, name);
+                        $("#topMenu").append(menu);
+                    }
+                });
+                Master.PageTitleSet(obj);
+            },
+            //상단메뉴 url만듬
+            TopMenuCreate: function (menuid, pageurl, menuname) {
+                var menu;
+                if ('@ViewBag.system_type' != 'D') {
+                    if (pageurl.toLowerCase().indexOf('sample') == -1) {
+                        menu = '<li><a href="javascript:Master.PageRedirect(' + menuid + ',\'' + pageurl + '\')">' + menuname + '</a></li>';
+                    }
+                }
+                else {
+                    menu = '<li><a href="javascript:Master.PageRedirect(' + menuid + ',\'' + pageurl + '\')">' + menuname + '</a></li>';
+                }
+                return menu;
+            },
+            //상단메뉴 활성
+            TopMenuActive: function () {
+                var url = '@Request.Url.AbsolutePath.ToLower().Split('/')[1]';
+                url = url.split('/')[url.split('/').length - 1];
+
+                $("#topMenu > li").each(function () {
+                    var cur = $(this).children("a").attr("href").toLowerCase().replace('javascript:master.pageredirect(', '').replace(')', '').replace('\'', '').replace('\'', '');
+                    cur = cur.split(',')[1];
+                    cur = cur.split('/')[1];
+                    if (cur == url) {
+                        $(this).addClass("active");
+                        $("#titleTop").text($(this).children("a").text());
+                    }
+                    else {
+                        $(this).removeClass("active");
+                    }
+                });
+            },
+            //타이틀 세팅
+            PageTitleSet : function(obj){
+                var url = '@Request.Url.AbsolutePath.ToLower()';
+                var arrUrl = url.split('/');
+                var curl = "";
+                for (var i = 0; i < arrUrl.length - 1; i++) {
+                    if (arrUrl[i] != "") {
+                        curl += "/" + arrUrl[i];
+                    }
+                }
+                $.each(obj, function () {
+                    if (this.PAGE_URL.toLowerCase() == curl && this.UP_MENU_ID != '0') {
+                        var subTitle;
+                        if ('@Html.LanguageType()' == 'KO') {
+                            subTitle = this.MENU_NAME_KO;
+                        }
+                        if ('@Html.LanguageType()' == 'EN') {
+                            subTitle = this.MENU_NAME_EN;
+                        }
+                        if ('@Html.LanguageType()' == 'JP') {
+                            subTitle = this.MENU_NAME_JP;
+                        }
+                        if ('@Html.LanguageType()' == 'CH') {
+                            subTitle = this.MENU_NAME_CH
+                        }
+                        $("#titleMiddle").append(subTitle);
+                    }
+                });
+            },
+            //좌측메뉴 토글
+            SlidebarToggle: function () {
+                var status = $("#hidSide").val();
+                if (status == 1) {
+                    $("#toggleSidebar > span").removeClass("glyphicon-chevron-left");
+                    $("#toggleSidebar > span").addClass("glyphicon-chevron-right");
+                    $("#divMain").removeClass("col-sm-9 col-md-10");
+                    $("#divMain").addClass("col-sm-12 col-md-12 no-sidebar");
+                    $("#divFooter").removeClass("col-sm-9 col-md-10");
+                    $("#divFooter").addClass("col-sm-12 col-md-12 no-sidebar");
+                    $('#divSideBar').hide();
+                    $("#hidSide").val('2');
+                }
+                else {
+                    $("#toggleSidebar > span").removeClass("glyphicon-chevron-right");
+                    $("#toggleSidebar > span").addClass("glyphicon-chevron-left");
+                    $("#divMain").removeClass("col-sm-12 col-md-12 no-sidebar");
+                    $("#divMain").addClass("col-sm-9 col-md-10");
+                    $("#divFooter").removeClass("col-sm-12 col-md-12 no-sidebar");
+                    $("#divFooter").addClass("col-sm-9 col-md-10");
+                    $('#divSideBar').show();
+                    $("#hidSide").val('1');
+                }
+                $(window).trigger('resize');
+            },
+            //좌측메뉴 생성
+            SideTreeCreate: function () {
+                var url = '@Request.Url.AbsolutePath';
+                var arrUrl = url.split('/');
+                var id = arrUrl.length > 2 ? arrUrl[arrUrl.length - 1] : 0;
+                $("#topMenuId").val(id);
+                $("#tree").dynatree({
+                    selectMode: 1,
+                    persist: false,
+                    autoFocus: false,
+                    minExpandLevel: 7,
+                    clickFolderMode: 3,
+                    initId: 'tid',
+                    initAjax: {
+                        type: 'post',
+                        data: {id : id},
+                        url: '@Url.Action("SMenu", "Webbase")'
+                    },
+                    onActivate: function (node) {
+                        if (node.data.href) {
+                            $.cookie('dynatree-active', node.data.id);
+                            $.cookie('dynatree-focus', node.data.id);
+                            $.cookie('dynatree-active', node.data.id);
+                            location.href = node.data.href;
+                        }
+                    }
+                });
+                $("#tree").dynatree("getTree").activateKey(id);
+            },
+            //메뉴 클릭
+            PageRedirect: function (id, url) {
+                $("#formMain").attr("action", "@Url.Action("TopMenuRedirect", "Webbase")");
+                $("#topMenuId").val(id);
+                $("#topMenuUrl").val(url);
+                $("#formMain").submit();
+            },
+            AjaxProgress: function () {
+                $(document).ajaxStart(function () {
+                    NProgress.start();
+                }).ajaxStop(function(){
+                    NProgress.done();
+                });
+            }
+        }
+        
+    </script>
+    @RenderSection("script_bottom", false)
+</body>
+</html>

@@ -1,0 +1,185 @@
+﻿@model List<MvcFramework.Model.Model_Category_Info>
+<style>
+    #sortable {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        width: 80%;
+    }
+    #sortable li {
+        margin: 0 3px 3px 3px;
+        padding: 0.4em;
+        padding-left: 1.5em;
+        font-size: 1.4em;
+        height: 80px;
+    }
+
+    #sortable li span {
+        position: absolute;
+        margin-left: -1.3em;
+    }
+</style>
+<div id="divGrid">
+    <div class="row" style="padding: 0 10px 0 10px;">
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <th style="width:10%;">
+                        Category
+                    </th>
+                    <td>
+                        <select id="selCategory">
+                            <option value="">@Html.Language(50, "전체")</option>
+                            @foreach (var data in Model)
+                            {
+                                    <option value="@data.CATEGORY_ID">
+                                        @data.CATEGORY_NAME
+                                    </option>
+                            }
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row" style="padding: 0 10px 0 10px;">
+        <div id="jqgrid" style="width:100%;">
+            <table id="grid"></table>
+            <div id="gridpager"></div>
+        </div>
+    </div>
+</div>
+
+<div id="div_item" style="display:none;">
+    <div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+        @Html.ButtonImg("A", "btnAdd", "추가")
+        @Html.ButtonImg("I", "btnSave", "저장")
+        @Html.ButtonImg("C", "btnCancle", "취소")
+    </div>
+
+    <ul id="sortable">
+    </ul>
+    <input type="hidden" id="hidCategory" />
+</div>
+
+@section script_bottom
+{
+    <script type="text/javascript">
+        $(function () {
+            Page.GridInit();
+            $("#sortable").sortable({
+                placeholder: "ui-state-highlight"
+            });
+            $("#sortable").disableSelection();
+            $("#selCategory").change(function () {
+                Page.GridLoad();
+            });
+            $("#btnAdd").click(function () {
+                Page.AddCode();
+            });
+            $("#btnSave").click(function () {
+                Page.Save();
+            });
+            $("#btnCancle").click(function () {
+                Page.Cancle();
+            });
+        });
+
+        var Page = {
+            GridInit: function () {
+                var columData = [
+                  { name: 'CODE_ID', label: 'Id', align: 'center', key: true, hidden: true },
+                  { name: 'CATEGORY_ID', label: 'Id', align: 'center', hidden: true },
+                  { name: 'CATEGORY_NAME', label: '@Html.Language(54, "카테고리 이름")', align: 'left', width: '200px', sortable: false },
+                  { name: 'ETC_CODE', label: '@Html.Language(56, "코드")', align: 'left', width: '100px', sortable: false},
+                  { name: 'CODE_NAME', label: '@Html.Language(59, "코드명")', align: 'left', width: '200px', sortable: false},
+                  { name: 'SORT_ORDER', label: '@Html.Language(34, "순위")', align: 'right', width: '50px', sortable: false }
+                ];
+                Grid.GridInit('grid', 'jqgrid', columData, 'CODE_ID', '@Url.Action("Mng008List")', 350, 'List', false);
+                $("#grid").jqGrid('setGridParam', {
+                    ondblClickRow: function (rowid, irow, icol, e) { Page.GridClick(rowid, irow, icol, e); }
+                });
+            },
+            GridLoad: function () {
+                Grid.SearchGrid({ category: $("#selCategory").val() });
+            },
+            GridClick: function (rowid, irow, icol, e) {
+                $("#sortable > li").remove();
+                var ret = $("#grid").jqGrid('getRowData', rowid);
+                $("#hidCategory").val(ret.CATEGORY_ID);
+                var data = Common.Ajax("@Url.Action("Mng008SubList","Mng")", { category: ret.CATEGORY_ID });
+                Page.CreateCode(data);
+                $("#divGrid").toggle();
+                $("#div_item").toggle();
+            },
+            CreateCode: function (items) {
+                $.each(items, function (i, value) {
+                    var html = '<li class="ui-state-default">';
+                    html += '       <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>';
+                    html += '       <input type="text" name="txt_etc_code" value="' + value.ETC_CODE + '" placeholder="@Html.Language(56, "코드")" />';
+                    html += '</br>';
+                    html += '       <input type="text" name="txt_name_ko" value="' + value.CODE_NAME_KR + '" placeholder="한글명" />';
+                    html += '       <input type="text" name="txt_name_jp" value="' + value.CODE_NAME_JP + '" placeholder="日本語" />';
+                    html += '       <input type="text" name="txt_name_en" value="' + value.CODE_NAME_EN + '" placeholder="English" />';
+                    html += '       <input type="text" name="txt_name_ch" value="' + value.CODE_NAME_CH + '" placeholder="中国的" />';
+                    html == '       <input type="hidden" name="hid_code_id" value="' + value.CODE_ID + '" />';
+                    html == '       <input type="hidden" name="hid_category_id" value="' + value.CATEGORY_ID + '" />';
+                    html += '</li>';
+                    $("#sortable").append(html);
+                });
+            },
+            AddCode: function () {
+                var html = '<li class="ui-state-default">';
+                html += '       <span class="ui-icon ui-icon-arrowthick-2-n-s"></span>';
+                html += '       <input type="text" name="txt_etc_code" placeholder="@Html.Language(56, "코드")" />';
+                html += '</br>';
+                html += '       <input type="text" name="txt_name_ko" value="" placeholder="한글명" />';
+                html += '       <input type="text" name="txt_name_jp" value="" placeholder="日本語" />';
+                html += '       <input type="text" name="txt_name_en" value="" placeholder="English" />';
+                html += '       <input type="text" name="txt_name_ch" value="" placeholder="中国的" />';
+                html == '       <input type="hidden" name="hid_code_id" value="" />';
+                html == '       <input type="hidden" name="hid_category_id" value="' + $("#hidCategory").val() + '" />';
+                html += '</li>';
+                $("#sortable").append(html);
+            },
+            Save: function () {
+                var arr_etc_id = [];
+                var arr_ko = [];
+                var arr_jp = [];
+                var arr_en = [];
+                var arr_ch = [];
+
+                var etc_code = $('[name="txt_etc_code"]');
+                var name_ko = $('[name="txt_name_ko"]');
+                var name_jp = $('[name="txt_name_jp"]');
+                var name_en = $('[name="txt_name_en"]');
+                var name_ch = $('[name="txt_name_ch"]');
+
+                $.each(etc_code, function (i, obj) {
+                    arr_etc_id.push($(obj).val());
+                    arr_ko.push(name_ko.eq(i).val());
+                    arr_jp.push(name_jp.eq(i).val());
+                    arr_en.push(name_en.eq(i).val());
+                    arr_ch.push(name_ch.eq(i).val());
+                });
+
+                var data = Common.Ajax('@Url.Action("Mng008Insert")', {
+                    category: $("#hidCategory").val(), etc_code: $.toJSON(arr_etc_id)
+                    , ko: $.toJSON(arr_ko), jp: $.toJSON(arr_jp), en: $.toJSON(arr_en), ch: $.toJSON(arr_ch)
+                });
+                Common.Alert('@Html.Language(1, "저장 되었습니다.")', data + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                Page.GridLoad();
+                $("#divGrid").toggle();
+                $("#div_item").toggle();
+                $("#sortable > li").remove();
+            },
+            Cancle: function () {
+                $("#sortable > li").remove();
+                $("#divGrid").toggle();
+                $("#div_item").toggle();
+            }
+        }
+    </script>
+
+}

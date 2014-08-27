@@ -1,0 +1,130 @@
+﻿
+<div id="jqgrid" style="width:100%;">
+    <table id="grid"></table>
+    <div id="gridpager"></div>
+</div>
+
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+    @Html.ButtonImg("A", "btnAdd", "추가")
+    @Html.ButtonImg("U", "btnEdit", "수정")
+    @Html.ButtonImg("D", "btnDelete", "삭제")
+</div>
+
+<div id="div_popup" style="display:none;">
+    <form role="form">
+        <div class="form-group">
+            <label for="txtJp">@Html.Language(56, "코드")</label>
+            <input type="text" class="form-control" id="txtCode" autofocus>
+            <span class="help-block"></span> 
+            <input type="hidden" id="txtYn" />
+        </div>
+        <div class="form-group">
+            <label for="txtKo">@Html.Language(54, "카테고리 이름")</label>
+            <input type="text" class="form-control" id="txtName" autofocus>
+        </div>
+        <div class="form-group">
+            <label for="txtEn">@Html.Language(16, "설명")</label>
+            <textarea class="form-control" rows="3" id="txtDesc"></textarea>
+        </div>
+        @Html.ButtonImg("I", "btnAddRun", "저장")
+        @Html.ButtonImg("C", "btnEnd", "취소")
+    </form>
+</div>
+
+
+@section script_bottom
+{
+    <script type="text/javascript">
+    $(function () {
+        Page.GridInit();
+        $("#btnEdit").click(function () {
+            Page.Edit();
+        });
+        $("#btnAdd").click(function () {
+            Page.Add();
+        });
+        $("#txtCode").focusout(function () {
+            Page.CheckId();
+        });
+        $("#btnAddRun").click(function () {
+            Page.Save();
+        });
+        $("#btnDelete").click(function () {
+            Page.RunDelete();
+        });
+    });
+    var Page = {
+        GridInit: function () {
+            var columData = [
+              { name: 'CATEGORY_ID', label: 'Id', align: 'center', key: true, width: '100px' },
+              { name: 'CATEGORY_NAME', label: '@Html.Language(54, "카테고리 이름")', align: 'left', width: '300px', sortable: true, editable: true },
+              { name: 'CATEGORY_DESC', label: '@Html.Language(16, "설명")', align: 'left', width: '400px', sortable: false, editable: true },
+              { name: 'CODE_COUNT', label: '@Html.Language(56, "코드")', align: 'right', width: '200px', sortable: false }
+            ];
+            Grid.GridInit('grid', 'jqgrid', columData, 'CATEGORY_NAME', '@Url.Action("Mng007List")', 310, 'List', true);
+
+        },
+        GridLoad: function () {
+            $("#grid").trigger("reloadGrid");
+        },
+        Edit: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                var id = [];
+                var name = [];
+                var desc = [];
+                $.each(arrSelRow, function (i, val) {
+                    var ret = $("#grid").jqGrid('getRowData', val);
+                    id.push(val);
+                    name.push($("#" + val + "_CATEGORY_NAME").val());
+                    desc.push($("#" + val + "_CATEGORY_DESC").val());
+                });
+                var result = Common.Ajax("@Url.Action("Mng007Update", "Mng")", { ids: $.toJSON(id), names: $.toJSON(name), descc: $.toJSON(desc) });
+                if (result > 0) {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                    Page.GridLoad();
+                }
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        },
+        Add: function () {
+            Common.OpenPopup('div_popup', 'Edit', 500, 400);
+        },
+        CheckId: function () {
+            var result = Common.Ajax("@Url.Action("Mng007Check", "Mng")", { id: $("#txtCode").val() });
+            if (result > 0) {
+                $(".help-block").text('@Html.Language(57, "존재하는 코드입니다")');
+                $(".help-block").css("color", "red");
+            }
+            else {
+                $(".help-block").text('@Html.Language(58, "사용가능한 코드입니다")');
+                $(".help-block").css("color", "blue");
+            }
+        },
+        Save: function () {
+            var result = Common.Ajax("@Url.Action("Mng007Insert", "Mng")", { id: $("#txtCode").val(), name: $("#txtName").val(), desc: $("#txtDesc").val() });
+            if (result > 0) {
+                Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                Page.GridLoad();
+            }
+        },
+        RunDelete: function () {
+            var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+            if (arrSelRow.length > 0) {
+                var arrIds = [];
+                $.each(arrSelRow, function (i, val) {
+                    arrIds.push(val);
+                });
+                var data = Common.Ajax('@Url.Action("Mng007Delete")', { id: $.toJSON(arrIds) });
+                Common.Alert('@Html.Language(13, "삭제되었습니다")', data + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                Page.GridLoad();
+            }
+            else {
+                Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+            }
+        }
+    }
+    </script>
+}

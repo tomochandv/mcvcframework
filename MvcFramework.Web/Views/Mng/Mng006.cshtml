@@ -1,0 +1,172 @@
+﻿@model  List<MvcFramework.Model.Model_Role_Info>
+
+<div class="row" style="padding: 0 10px 0 10px;">
+    <table class="table table-bordered">
+        <tbody>
+            <tr>
+                <th style="width:10%;">
+                    @Html.Language(40, "권한명")
+                </th>
+                <td>
+                    <select id="selRole">
+                        <option value="0">@Html.Language(50, "전체")</option>
+                        @foreach (var data in Model)
+                        {
+                            <option value="@data.ROLE_ID">
+                                @if (new Loc_LanguageInfo().GetLanguageType() == "KO")
+                                {
+                                    @data.ROLE_KO_NAME
+                                }
+                                @if (new Loc_LanguageInfo().GetLanguageType() == "EN")
+                                {
+                                    @data.ROLE_EN_NAME
+                                }
+                                @if (new Loc_LanguageInfo().GetLanguageType() == "JP")
+                                {
+                                    @data.ROLE_JP_NAME
+                                }
+                                @if (new Loc_LanguageInfo().GetLanguageType() == "CH")
+                                {
+                                    @data.ROLE_CH_NAME
+                                }
+                            </option>
+                        }
+                    </select>
+                </td>
+                <th style="width: 10%;">
+                    @Html.Language(48, "이름")
+                </th>
+                <td>
+                    <div class="col-xs3">
+                        <input type="text" id="txtSname" />
+                    </div>
+                </td>
+                <th style="width: 10%;">
+                    @Html.Language(49, "부서")
+                </th>
+                <td>
+                    <div class="col-xs3">
+                        <input type="text" id="txtSdept" />
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="row" style="padding: 0 10px 0 10px;">
+    <div id="jqgrid" style="width:100%;">
+        <table id="grid"></table>
+        <div id="gridpager"></div>
+    </div>
+</div>
+
+<div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+
+    @Html.ButtonImg("A", "btnAdd", "저장")
+</div>
+<div id="div_popup" style="display:none;">
+    <p style="min-height:100px;">
+    @Html.Language(40, "권한명")
+    <select id="selInRole">
+        <option value="0">@Html.Language(53,"권한제거")</option>
+        @foreach (var data in Model)
+        {
+            <option value="@data.ROLE_ID">
+                @if (new Loc_LanguageInfo().GetLanguageType() == "KO")
+                {
+                    @data.ROLE_KO_NAME
+                }
+                @if (new Loc_LanguageInfo().GetLanguageType() == "EN")
+                {
+                    @data.ROLE_EN_NAME
+                }
+                @if (new Loc_LanguageInfo().GetLanguageType() == "JP")
+                {
+                    @data.ROLE_JP_NAME
+                }
+                @if (new Loc_LanguageInfo().GetLanguageType() == "CH")
+                {
+                    @data.ROLE_CH_NAME
+                }
+            </option>
+        }
+    </select>
+    </</p>
+    <p style="text-align:right;">
+        @Html.ButtonImg("I", "btnSave", "저장")
+    </p>
+</div>
+@section script_bottom
+{
+    <script type="text/javascript">
+        $(function () {
+            Page.GridInit();
+            $("#selRole").change(function () {
+                Page.GridLoad();
+            });
+            $("#txtSname, #txtSdept").keypress(function () {
+                if (event.which == 13) {
+                    Page.GridLoad();
+                }
+            });
+            $("#btnAdd").click(function () {
+                Page.Add();
+            });
+            $("#btnSave").click(function () {
+                Page.Save();
+            });
+        });
+
+        var Page = {
+            GridInit: function () {
+                var columData = [
+                   { name: 'EMP_REF_ID', key: true, hidden: true },
+                   { name: 'DEPT_REF_ID', hidden: true },
+                   { name: 'ROLE_ID', hidden: true },
+                   { name: 'EMP_NAME', label: '@Html.Language(48, "이름")', align: 'left', width: '200px', sortable: true },
+                   { name: 'DEPT_NAME', label: '@Html.Language(49, "부서")', align: 'left', width: '200px', sortable: false },
+                   { name: 'ROLE_NAME', label: '@Html.Language(40, "권한명")', align: 'left', width: '200px', sortable: false }
+                ];
+                Grid.GridInit('grid', 'jqgrid', columData, 'EMP_NAME', '@Url.Action("Mng006List")', 380, 'List', true);
+            },
+            GridLoad: function () {
+                var role_id = $("#selRole").val();
+                var name = $("#txtSname").val();
+                var dept = $("#txtSdept").val();
+                Grid.SearchGrid({ dept_name: dept, emp_name: name, role_id: role_id });
+            },
+            Add: function () {
+                var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+                if (arrSelRow.length > 0) {
+
+                    $("#div_popup").dialog({
+                        resizable: false,
+                        height: 250,
+                        modal: true,
+                        title: '@Html.Language(51, "저장하시겠습니까?")'
+                    });
+                }
+                else {
+                    Common.Alert('@Html.Language(18, "선택된 값이 없습니다")', '@Html.Language(19, "하나이상의 값은 선택되어야 합니다")', 'I');
+                }
+                
+            },
+            Save: function () {
+                var arrSelRow = $('#grid').jqGrid('getGridParam', 'selarrrow');
+                var arrIds = [];
+                $.each(arrSelRow, function (i, val) {
+                    var ret = $("#grid").jqGrid('getRowData',val);
+                    arrIds.push(ret.EMP_REF_ID);
+                });
+                var data = {
+                    emp_ref_id: $.toJSON(arrIds),
+                    role_id: $("#selInRole").val()
+                };
+                var result = Common.Ajax('@Url.Action("Mng006Insert")', data);
+                Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                Page.GridLoad();
+            }
+        }
+    </script>
+}

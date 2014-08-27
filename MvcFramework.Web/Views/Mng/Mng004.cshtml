@@ -1,0 +1,382 @@
+﻿@model List<MvcFramework.Model.Model_Page_Info>
+
+<div class="row">
+    <div class="col-md-12" style="padding-bottom:10px;">
+        @Html.ButtonImg("A", "btnAdd", "추가")
+    </div>
+    <div class="col-md-12" id="div_page_side">
+        <div class="panel panel-default">
+            <div class="panel-heading">Menu Tree</div>
+            <div class="panel-body">
+                <div id="menu_tree" style="height:100%;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9" id="div_page_form" style="display:none;">
+        <div class="row" style="padding-right:10px;">
+            <form role="form" id="formMenuInput">
+                <div class="form-group" title="ftopId">
+                    <label for="txtParentName">@Html.Language(32, "상위메뉴")</label>
+                    <input type="text" class="form-control" id="txtParentName" readonly placeholder="Click...">
+                    <input type="hidden" id="hid_up_id" />
+                </div>
+                <div class="checkbox" title="ftopId">
+                    <label>
+                        <input type="checkbox" id="ckTop"> @Html.Language(35, "최상위 메뉴")
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="txtKo">@Html.Language(31, "메뉴명")</label>
+                    <input type="text" class="form-control" id="txtKo" placeholder="한글명">
+                    <input type="text" class="form-control" id="txtEn" placeholder="English">
+                    <input type="text" class="form-control" id="txtJp" placeholder="日本語">
+                    <input type="text" class="form-control" id="txtCh" placeholder="中国的">
+                    <input type="hidden" id="hid_menu_id" />
+                </div>
+                <div class="form-group">
+                    <label for="txtPageName">@Html.Language(26, "페이지명")</label>
+                    <input type="text" class="form-control" id="txtPageName" readonly placeholder="Click...">
+                    <input type="hidden" id="hid_Page_id" />
+                </div>
+                <div class="form-group">
+                    <label for="selOrder">@Html.Language(34, "순위")</label>
+                    <select id="selOrder">
+                        @for (int i = 1; i < 101; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputFile">@Html.Language(33, "사용여부")</label>
+                    <select id="selYn">
+                        <option value="Y">@Html.Language(36, "사용")</option>
+                        <option value="N">@Html.Language(37, "미사용")</option>
+                    </select>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="row" style="padding: 5px 10px 0 10px; text-align:right;">
+            @Html.ButtonImg("I", "btnSave", "저장")
+            @Html.ButtonImg("U", "btnEdit", "수정")
+            @Html.ButtonImg("D", "btnDelete", "삭제")
+            @Html.ButtonImg("C", "btnCancle", "취소")
+        </div>
+    </div>
+</div>
+
+<div id="div_pageInfo" style="display:none;">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>@Html.Language(26, "페이지명")</th>
+                <th>@Html.Language(27, "URL")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var data in Model)
+            {
+                <tr style="cursor:pointer;" onclick="Page.SelectPage(@data.PAGE_ID, '@data.PAGE_NAME_KO');">
+                    <td>@data.PAGE_ID</td>
+                    <td>@data.PAGE_NAME_KO</td>
+                    <td>@data.PAGE_URL</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="div_ParentInfo" style="display:none;">
+    <div id="menu_tree_pop"></div>
+</div>
+
+ @section script_bottom
+{
+<script type="text/javascript">
+    $(function () {
+        Page.Setting();
+        Page.TreeCreate();
+        Page.PopUpTreeCreate();
+        $("#txtPageName").bind('click focus', function () {
+            Common.OpenPopup('div_pageInfo', 'Select Page', 800, 400);
+        });
+        $("#txtParentName").bind('click focus', function () {
+            Common.OpenPopup('div_ParentInfo', 'Select Parent node', 800, 400);
+        });
+        $("#ckTop").click(function () {
+            Page.CheckBoxClick();
+        });
+        $("#btnAdd").click(function () {
+            Page.ClearAll();
+            Page.CreateOrder(0);
+            $("#btnEdit, #btnDelete, #btnAdd").hide();
+            $("#btnCancle, #btnSave").show();
+            $("[title='ftopId']").show();
+            Page.FormSetting('S');
+        });
+        $("#btnCancle").click(function () {
+            Page.Setting();
+            $("#btnAdd").show();
+            Page.FormSetting('H');
+        });
+        $("#btnSave").click(function () {
+            Page.Save();
+        });
+        $("#btnEdit").click(function () {
+            Page.Edit();
+        });
+        $("#btnDelete").click(function () {
+            Page.Delete();
+        });
+    });
+
+    var Page = {
+        Setting : function(){
+            $("#btnEdit, #btnDelete, #btnSave, #btnCancle").hide();
+            Page.ClearAll();
+        },
+        FormSetting : function(type){
+            var side = $("#div_page_side");
+            var main = $("#div_page_form");
+            if (type == "S") {
+                side.removeClass("col-md-12");
+                side.addClass("col-md-3");
+                main.addClass("col-md-9");
+                main.show();
+            }
+            else {
+                side.removeClass("col-md-3");
+                side.addClass("col-md-12");
+                main.hide();
+            }
+        },
+        TreeCreate: function () {
+            $("#menu_tree").dynatree({
+                selectMode: 1,
+                persist: true,
+                autoFocus: false,
+                clickFolderMode: 3,
+                minExpandLevel: 4,
+                keyboard: true,
+                initId: 'tid',
+                initAjax: {
+                    type: 'post',
+                    url: '@Url.Action("Mng004TreeList", "Mng")'
+                },
+                onClick: function (node, event) {
+                    Page.TreeClick(node.data.key);
+                }
+            });
+        },
+        PopUpTreeCreate: function(){
+            $("#menu_tree_pop").dynatree({
+                selectMode: 1,
+                persist: true,
+                autoFocus: false,
+                clickFolderMode: 3,
+                minExpandLevel: 4,
+                keyboard: true,
+                initId: 'tid',
+                initAjax: {
+                    type: 'post',
+                    url: '@Url.Action("Mng004TreeList", "Mng")'
+                },
+                onClick: function (node, event) {
+                    $("#txtParentName").val(node.data.title);
+                    $("#hid_up_id").val(node.data.key);
+                    $("#div_ParentInfo").dialog('close');
+                    Page.CreateOrder(node.data.key);
+                }
+            });
+        },
+        SelectPage: function (id, name) {
+            $("#txtPageName").val(name);
+            $("#hid_Page_id").val(id);
+            $("#div_pageInfo").dialog('close');
+        },
+        CheckBoxClick: function () {
+            var check = $("#ckTop:checked").length;
+            if (check > 0) {
+                $("#txtParentName").val('');
+                $("#hid_up_id").val('');
+            }
+        },
+        ClearAll: function () {
+            document.getElementById("ckTop").checked = false;
+            $("#formMenuInput input[type='text'], #formMenuInput input[type='hidden']").val('');
+            $("#selOrder option").remove();
+            for (var i = 1; i < 101; i++) {
+                $("#selOrder").append('<option value="' + i + '">' + i + '</option>');
+            }
+        },
+        CreateOrder: function (id) {
+            var data = Common.Ajax('@Url.Action("Mng004CheckOrder")', { id: id });
+            var obj = $.parseJSON(data);
+            $.each(obj, function (index, value) {
+                $("#selOrder option[value='" + value.SORT_ORDER + "']").remove();
+            });
+           
+        },
+        Save: function () {
+            if (Page.Validation()) {
+                var parentId = $("#hid_up_id").val();
+                var isParent = $("#ckTop:checked").length;
+                var ko = $("#txtKo").val();
+                var en = $("#txtEn").val();
+                var jp = $("#txtJp").val();
+                var ch = $("#txtCh").val();
+                var pageid = $("#hid_Page_id").val();
+                var data = {
+                    up_menu_id: isParent > 0 ? 0 : parentId,
+                    menu_name_ko: ko,
+                    menu_name_en: en,
+                    menu_name_jp: jp,
+                    menu_name_ch: ch,
+                    page_id: pageid,
+                    use_yn: $("#selYn").val(),
+                    sort_order: $("#selOrder").val()
+                };
+                var result = Common.Ajax('@Url.Action("Mng004Insert")', data);
+                if (result > 0) {
+                    Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                    Page.ClearAll();
+                    $("#btnEdit, #btnDelete, #btnSave, #btnCancle").hide();
+                    $("#menu_tree, #menu_tree_pop").dynatree("getTree").reload();
+
+                }
+                else {
+                    Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+                }
+            }
+            else {
+                Common.Alert('','@Html.Language(5,"항목을 입력하세요")','E');
+            }
+        },
+        Validation: function () {
+            var parentId = $("#hid_up_id").val();
+            var isParent = $("#ckTop:checked").length;
+            var ko = $("#txtKo").val();
+            var en = $("#txtEn").val();
+            var jp = $("#txtJp").val();
+            var ch = $("#txtCh").val();
+            var pageid = $("#hid_Page_id").val();
+            //상위메뉴체크
+            if (parentId == '' && isParent == 0) {
+                $("#hid_up_id").parent().addClass('has-error');
+                return false;
+            }
+            else {
+                $("#hid_up_id").parent().removeClass('has-error');
+            }
+            //메뉴명체크
+            if (ko == '' && en == '' && jp == '' && ch == '') {
+                $("#txtKo").parent().addClass('has-error');
+                return false;
+            }
+            else {
+                $("#txtKo").parent().removeClass('has-error');
+            }
+            //페이지체크
+            if (pageid == '') {
+                $("#hid_Page_id").parent().addClass('has-error');
+                return false;
+            }
+            else {
+                $("#hid_Page_id").parent().removeClass('has-error');
+            }
+            return true;
+        },
+        TreeClick: function (id) {
+            Page.ClearAll();
+            var obj = Common.Ajax("@Url.Action("Mng004View")", { id: id });
+            $.each($.parseJSON(obj), function (index, value) {
+                var up_menu_id = value.UP_MENU_ID;
+                if (up_menu_id != 0) {
+                    $("#hid_up_id").val(up_menu_id);
+                    if ('@Html.LanguageType()' == "KO") {
+                        $("#txtParentName").val(value.UP_MENU_NAME_KO);
+                    }
+                    if ('@Html.LanguageType()' == "EN") {
+                        $("#txtParentName").val(value.UP_MENU_NAME_EN);
+                    }
+                    if ('@Html.LanguageType()' == "JP") {
+                        $("#txtParentName").val(value.UP_MENU_NAME_JP);
+                    }
+                    if ('@Html.LanguageType()' == "CH") {
+                        $("#txtParentName").val(value.UP_MENU_NAME_CH);
+                    }
+                }
+                else {
+                    document.getElementById("ckTop").checked = true;
+                    $("#hid_up_id").val(value.UP_MENU_ID);
+                }
+                
+                $("#hid_menu_id").val(value.MENU_ID);
+                $("#txtKo").val(value.MENU_NAME_KO);
+                $("#txtEn").val(value.MENU_NAME_EN);
+                $("#txtJp").val(value.MENU_NAME_JP);
+                $("#txtCh").val(value.MENU_NAME_CH);
+                $("#hid_Page_id").val(value.PAGE_ID);
+                $("#txtPageName").val(value.PAGE_NAME_KO);
+
+                Page.CreateOrder(up_menu_id);
+                $("#selOrder").prepend('<option value="' + value.SORT_ORDER + '">' + value.SORT_ORDER + '</option>');
+                $("#selOrder").val(value.SORT_ORDER);
+                $("#selYn").val(value.USE_YN);
+
+                $("#btnAdd, #btnSave").hide();
+                $("#btnEdit, #btnDelete, #btnCancle").show();
+                $("[title='ftopId']").hide();
+                Page.FormSetting('S');
+            });
+        },
+        Edit: function () {
+            var parentId = $("#hid_up_id").val();
+            var ko = $("#txtKo").val();
+            var en = $("#txtEn").val();
+            var jp = $("#txtJp").val();
+            var ch = $("#txtCh").val();
+            var pageid = $("#hid_Page_id").val();
+            var menu_id = $("#hid_menu_id").val();
+            var data = {
+                menu_id : menu_id,
+                up_menu_id: parentId,
+                menu_name_ko: ko,
+                menu_name_en: en,
+                menu_name_jp: jp,
+                menu_name_ch: ch,
+                page_id: pageid,
+                use_yn: $("#selYn").val(),
+                sort_order: $("#selOrder").val()
+            };
+            var result = Common.Ajax('@Url.Action("Mng004Update")', data);
+            if (result > 0) {
+                Common.Alert('@Html.Language(1, "저장 되었습니다.")', result + '@Html.Language(22, "건이 저장 되었습니다")', 'S');
+                Page.ClearAll();
+                $("#btnEdit, #btnDelete, #btnSave, #btnCancle").hide();
+                Page.FormSetting('H');
+                $("#menu_tree").dynatree("getTree").reload();
+            }
+            else {
+                Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+            }
+        },
+        Delete: function () {
+            var result = Common.Ajax('@Url.Action("Mng004Delete")', { menu_id: $("#hid_menu_id").val() });
+            if (result > 0) {
+                Common.Alert('@Html.Language(13, "삭제되었습니다")', result + '@Html.Language(20, "건이 삭제 되었습니다")', 'S');
+                Page.ClearAll();
+                $("#btnEdit, #btnDelete, #btnSave, #btnCancle").hide();
+                Page.FormSetting('H');
+                $("#menu_tree").dynatree("getTree").reload();
+            }
+            else {
+                Common.Alert('@Html.Language(11, "실패하였습니다")', '@Html.Language(11, "실패하였습니다")', 'E');
+            }
+        }
+    }
+</script>
+}
